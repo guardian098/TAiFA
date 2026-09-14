@@ -48,7 +48,7 @@
 | Возврат каретки (CR)          | 0x0D      |
 | Form feed (FF)                | 0x0C      |
 
-Список ключевых слов: `bool`, `int`, `string`, `void`, `null`, , `struct`, `true`, `false`, `if`, `else`, `elif`, `while`, `exception`.
+Список ключевых слов: `bool`, `int`, `string`, `void`, `null`, `struct`, `true`, `false`, `if`, `else`, `elif`, `while`, `exception`.
 
 Список лексем, используемых в роли операторов выражения: `=`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `&&`, `||`, `!`, `+`, `-`, `*`, `/`, `.`, `++`, `--`
 
