@@ -54,6 +54,19 @@ public class LexerTest
         return new TheoryData<string, List<Token>>
         {
             {
+                "if a < 0 { exception }",
+                [
+                    new Token(TokenType.IfKeyword),
+                    new Token(TokenType.Identifier, "a"),
+                    new Token(TokenType.Less),
+                    new Token(TokenType.IntLiteral, 0),
+                    new Token(TokenType.LeftBrace),
+                    new Token(TokenType.ExceptionKeyword),
+                    new Token(TokenType.RightBrace),
+                    new Token(TokenType.EndOfFile)
+                ]
+            },
+            {
                 "bool int string void",
                 [
                     new Token(TokenType.BoolKeyword),
@@ -189,7 +202,7 @@ public class LexerTest
                     new Token(TokenType.RightBrace),
                     new Token(TokenType.EndOfFile)
                 ]
-            }
+            },
         };
     }
 
@@ -237,7 +250,7 @@ public class LexerTest
                     new Token(TokenType.StringLiteral, "Hello\tWorld\n"),
                     new Token(TokenType.EndOfFile)
                 ]
-            }
+            },
         };
     }
 
@@ -357,7 +370,7 @@ public class LexerTest
                     new Token(TokenType.RightBrace),
                     new Token(TokenType.EndOfFile)
                 ]
-            }
+            },
         };
     }
 
@@ -403,7 +416,7 @@ public class LexerTest
                     new Token(TokenType.Slash),
                     new Token(TokenType.EndOfFile)
                 ]
-            }
+            },
         };
     }
 
@@ -478,7 +491,25 @@ public class LexerTest
                 [
                     new Token(TokenType.Error, "/* abc")
                 ]
-            }
+            },
+            {
+                "\"\r\n",
+                [
+                    new Token(TokenType.Error, "\"")
+                ]
+            },
+            {
+                "\"первая строка\r\nвторая строка\"",
+                [
+                    new Token(TokenType.Error, "\"первая строка")
+                ]
+            },
+            {
+                "\"первая строка\rвторая строка\"",
+                [
+                    new Token(TokenType.Error, "\"первая строка")
+                ]
+            },
         };
     }
 

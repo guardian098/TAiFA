@@ -20,7 +20,7 @@ public sealed class Lexer
         { "else", TokenType.ElseKeyword },
         { "elif", TokenType.ElifKeyword },
         { "while", TokenType.WhileKeyword },
-        { "exception", TokenType.ExceptionKeyword }
+        { "exception", TokenType.ExceptionKeyword },
     };
 
     private readonly TextScanner _scanner;
