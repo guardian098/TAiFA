@@ -46,5 +46,5 @@ public enum TokenType
     LeftBrace,
     RightBrace,
     Comma,
-    Semicolon
+    Semicolon,
 }
