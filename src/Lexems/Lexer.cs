@@ -177,6 +177,10 @@ public sealed class Lexer
                 _scanner.Advance();
                 return new Token(TokenType.Slash);
 
+            case '%':
+                _scanner.Advance();
+                return new Token(TokenType.Percent);
+
             case '=':
                 _scanner.Advance();
                 if (_scanner.Peek() == '=')

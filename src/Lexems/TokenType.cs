@@ -36,6 +36,7 @@ public enum TokenType
     Minus,
     Star,
     Slash,
+    Percent,
     Dot,
     Increment,
     Decrement,
