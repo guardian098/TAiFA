@@ -1,6 +1,7 @@
 namespace VirtualMachine;
 
-public enum OpCode{
+public enum OpCode
+{
     Push,
     Add,
     Sub,

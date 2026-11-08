@@ -8,7 +8,6 @@ namespace Parser.UnitTests;
 
 public class ParserTest
 {
-
     [Theory]
     [MemberData(nameof(GetValidProgramStructureData))]
     public void CanParseValidProgramStructure(string code, List<Instruction> expected)
@@ -74,7 +73,6 @@ public class ParserTest
     {
         return new TheoryData<string, List<Instruction>>
         {
-
             {
                 "void main() { }",
                 [
