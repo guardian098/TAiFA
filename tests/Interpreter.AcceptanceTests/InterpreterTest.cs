@@ -1,5 +1,7 @@
 ﻿using Lexems;
+
 using Parser;
+
 using VirtualMachine;
 
 namespace Interpreter.AcceptanceTests;
@@ -7,7 +9,7 @@ namespace Interpreter.AcceptanceTests;
 public class InterpreterTest
 {
     [Theory]
-    [InlineData("void main() { print(7 / 2); print(7 % 2); print(abs(-5)); print(sqrt(16)); print(min(3, 5)); print(max(3, 5)); }",  "3\n1\n5\n4\n3\n5\n")]
+    [InlineData("void main() { print(7 / 2); print(7 % 2); print(abs(-5)); print(sqrt(16)); print(min(3, 5)); print(max(3, 5)); }", "3\n1\n5\n4\n3\n5\n")]
     public void ExecuteProgrammFromDocumentation(string source, string expected)
     {
         Assert.Equal(Run(source), expected);
@@ -26,6 +28,14 @@ public class InterpreterTest
     }
 
     [Theory]
+    [InlineData("void main() { print(2147483648); }")]
+    [InlineData("void main() { print(-2147483648); }")]
+    public void InvalidLexemeThrowsLexerException(string source)
+    {
+        Assert.Throws<LexerException>(() => Run(source));
+    }
+
+    [Theory]
     [InlineData("void main() { print(1; }")]
     [InlineData("void main() { print(); }")]
     [InlineData("void main() { min(3 5); }")]
@@ -40,8 +50,8 @@ public class InterpreterTest
     [InlineData("void main() { print(10 / 0); }")]
     [InlineData("void main() { print(10 % 0); }")]
     [InlineData("void main() { print(sqrt(-1)); }")]
-    [InlineData("void main() { print(2147483648); }")]
-    [InlineData("void main() { print(-2147483648); }")]
+    [InlineData("void main() { print(2147483647 + 1); }")]
+    [InlineData("void main() { print(-2147483647 - 2); }")]
 
     public void RuntimeErrorThrowsVirtualMachineException(string source)
     {
