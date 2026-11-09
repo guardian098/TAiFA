@@ -1,4 +1,6 @@
-﻿namespace VirtualMachine;
+﻿using System.Globalization;
+
+namespace VirtualMachine;
 
 public class VirtualMachine
 {
@@ -152,7 +154,7 @@ public class VirtualMachine
                     case OpCode.Print:
                         {
                             int value = _stack.Pop();
-                            _output.WriteLine(value);
+                            _output.WriteLine(value.ToString(CultureInfo.InvariantCulture));
                         }
 
                         break;

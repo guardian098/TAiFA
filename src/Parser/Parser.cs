@@ -14,19 +14,27 @@ public sealed class Parser
     private Token _current;
 
     public Parser(IReadOnlyList<Token> tokens)
+{
+    ArgumentNullException.ThrowIfNull(tokens);
+
+    if (tokens.Count == 0)
     {
-        ArgumentNullException.ThrowIfNull(tokens);
-
-        if (tokens.Count == 0)
-        {
-            throw new ParserException("Token list cannot be empty.");
-        }
-
-        _tokens = tokens;
-        _instructions = new List<Instruction>();
-        _index = 0;
-        _current = _tokens[_index];
+        throw new ParserException("Token list cannot be empty.");
     }
+
+    foreach (Token token in tokens)
+    {
+        if (token.Type == TokenType.Error)
+        {
+            throw new LexerException($"Lexical error: invalid lexeme '{token.Value}'.");
+        }
+    }
+
+    _tokens = tokens;
+    _instructions = new List<Instruction>();
+    _index = 0;
+    _current = _tokens[_index];
+}
 
     /// <summary>
     /// Разбирает программу.
