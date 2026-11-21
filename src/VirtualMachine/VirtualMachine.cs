@@ -36,13 +36,13 @@ public class VirtualMachine
                         break;
 
                     case OpCode.Pop:
-                        _stack.Pop();
+                        Pop();
                         break;
 
                     case OpCode.Add:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             _stack.Push(checked(left + right));
                         }
 
@@ -50,8 +50,8 @@ public class VirtualMachine
 
                     case OpCode.Sub:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             _stack.Push(checked(left - right));
                         }
 
@@ -59,8 +59,8 @@ public class VirtualMachine
 
                     case OpCode.Mul:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             _stack.Push(checked(left * right));
                         }
 
@@ -68,8 +68,8 @@ public class VirtualMachine
 
                     case OpCode.Div:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             if (right == 0)
                             {
                                 throw new VirtualMachineException("Division by zero.");
@@ -82,8 +82,8 @@ public class VirtualMachine
 
                     case OpCode.Mod:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             if (right == 0)
                             {
                                 throw new VirtualMachineException("Modulo by zero.");
@@ -101,7 +101,7 @@ public class VirtualMachine
 
                     case OpCode.Neg:
                         {
-                            int operand = _stack.Pop();
+                            int operand = Pop();
                             _stack.Push(checked(-operand));
                         }
 
@@ -109,7 +109,7 @@ public class VirtualMachine
 
                     case OpCode.Abs:
                         {
-                            int operand = _stack.Pop();
+                            int operand = Pop();
                             if (operand == int.MinValue)
                             {
                                 throw new OverflowException();
@@ -122,7 +122,7 @@ public class VirtualMachine
 
                     case OpCode.Sqrt:
                         {
-                            int operand = _stack.Pop();
+                            int operand = Pop();
                             if (operand < 0)
                             {
                                 throw new VirtualMachineException("Square root of a negative number.");
@@ -135,8 +135,8 @@ public class VirtualMachine
 
                     case OpCode.Min:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             _stack.Push(Math.Min(left, right));
                         }
 
@@ -144,8 +144,8 @@ public class VirtualMachine
 
                     case OpCode.Max:
                         {
-                            int right = _stack.Pop();
-                            int left = _stack.Pop();
+                            int right = Pop();
+                            int left = Pop();
                             _stack.Push(Math.Max(left, right));
                         }
 
@@ -153,7 +153,7 @@ public class VirtualMachine
 
                     case OpCode.Print:
                         {
-                            int value = _stack.Pop();
+                            int value = Pop();
                             _output.WriteLine(value.ToString(CultureInfo.InvariantCulture));
                         }
 
@@ -168,5 +168,15 @@ public class VirtualMachine
                 throw new VirtualMachineException("Integer overflow during execution.", ex);
             }
         }
+    }
+
+    private int Pop()
+    {
+        if (_stack.Count == 0)
+        {
+            throw new VirtualMachineException("Stack underflow.");
+        }
+
+        return _stack.Pop();
     }
 }

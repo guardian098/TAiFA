@@ -67,12 +67,13 @@ public class LexerTest
                 ]
             },
             {
-                "bool int string void",
+                "bool int string void false",
                 [
                     new Token(TokenType.BoolKeyword),
                     new Token(TokenType.IntKeyword),
                     new Token(TokenType.StringKeyword),
                     new Token(TokenType.VoidKeyword),
+                    new Token(TokenType.FalseKeyword),
                     new Token(TokenType.EndOfFile)
                 ]
             },
@@ -508,6 +509,12 @@ public class LexerTest
                 "\"первая строка\rвторая строка\"",
                 [
                     new Token(TokenType.Error, "\"первая строка")
+                ]
+            },
+            {
+                "\"abc\\",
+                [
+                    new Token(TokenType.Error, "\"abc\\")
                 ]
             },
         };

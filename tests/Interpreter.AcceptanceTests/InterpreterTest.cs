@@ -10,7 +10,7 @@ public class InterpreterTest
 {
     [Theory]
     [InlineData("void main() { print(7 / 2); print(7 % 2); print(abs(-5)); print(sqrt(16)); print(min(3, 5)); print(max(3, 5)); }", "3\n1\n5\n4\n3\n5\n")]
-    public void ExecuteProgrammFromDocumentation(string source, string expected)
+    public void ExecuteProgramFromDocumentation(string source, string expected)
     {
         Assert.Equal(Run(source), expected);
     }
@@ -22,7 +22,7 @@ public class InterpreterTest
     [InlineData("void main() { 2 + 3; print(6); }", "6\n")]
     [InlineData("void main() { 7 + 3; }", "")]
     [InlineData("void main() { print(1 + 2 * 3 - 4 / 2); }", "5\n")]
-    public void ExecuteProgramm(string source, string expected)
+    public void ExecuteProgram(string source, string expected)
     {
         Assert.Equal(Run(source), expected);
     }

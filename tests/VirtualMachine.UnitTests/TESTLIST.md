@@ -33,6 +33,6 @@
 - [] `Push 10`, `Push 0`, `Div` - ошибка `VirtualMachineException`
 - [] `Push int.MaxValue`, `Push 1`, `Add` - ошибка `VirtualMachineException`
 - [] `Push -100`, `Sqrt` - ошибка `VirtualMachineException`
-- [] `Print` (пустой стек) - ошибка `InvalidOperationException`
+- [] `Print` (пустой стек) - ошибка `VirtualMachineException`
 - [] `Push int.MinValue`, `Neg` - ошибка `VirtualMachineException`
 - [] `Push int.MinValue`, `Abs` - ошибка `VirtualMachineException`

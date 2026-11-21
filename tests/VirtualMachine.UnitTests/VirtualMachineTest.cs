@@ -45,7 +45,7 @@ public class VirtualMachineTest
     [MemberData(nameof(GetStackUnderflowData))]
     public void CanReportStackUnderflow(List<Instruction> program)
     {
-        Assert.Throws<InvalidOperationException>(() => Execute(program));
+        Assert.Throws<VirtualMachineException>(() => Execute(program));
     }
 
     public static TheoryData<List<Instruction>, string> GetBasicOperationsData()
