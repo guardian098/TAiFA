@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text;
 
 namespace VirtualMachine;
 
@@ -7,9 +8,13 @@ public class VirtualMachine
     private readonly IReadOnlyList<Instruction> _instructions;
     private readonly Stack<int> _stack;
     private readonly TextWriter _output;
+    private readonly TextReader _input;
     private int _ip;
 
-    public VirtualMachine(IReadOnlyList<Instruction> instructions, TextWriter? output = null)
+    public VirtualMachine(
+        IReadOnlyList<Instruction> instructions,
+        TextWriter? output = null,
+        TextReader? input = null)
     {
         if (instructions == null)
         {
@@ -19,6 +24,7 @@ public class VirtualMachine
         _instructions = instructions;
         _stack = new Stack<int>();
         _output = output ?? Console.Out;
+        _input = input ?? Console.In;
         _ip = 0;
     }
 
@@ -159,8 +165,12 @@ public class VirtualMachine
 
                         break;
 
+                    case OpCode.Read:
+                        _stack.Push(ReadInt());
+                        break;
+
                     default:
-                        throw new NotImplementedException($"Unsupported instruction code: {instruction.Code}");
+                        throw new VirtualMachineException($"Unsupported instruction code: {instruction.Code}");
                 }
             }
             catch (OverflowException ex)
@@ -178,5 +188,37 @@ public class VirtualMachine
         }
 
         return _stack.Pop();
+    }
+
+    // Читает из входного потока следующее целое число.
+    // Число отделяется пробельными символами; один символ после числа потребляется.
+    private int ReadInt()
+    {
+        int symbol;
+        do
+        {
+            symbol = _input.Read();
+        }
+        while (symbol != -1 && char.IsWhiteSpace((char)symbol));
+
+        if (symbol == -1)
+        {
+            throw new VirtualMachineException("Unexpected end of input.");
+        }
+
+        StringBuilder token = new StringBuilder();
+        while (symbol != -1 && !char.IsWhiteSpace((char)symbol))
+        {
+            token.Append((char)symbol);
+            symbol = _input.Read();
+        }
+
+        string text = token.ToString();
+        if (!int.TryParse(text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int value))
+        {
+            throw new VirtualMachineException($"Invalid integer input '{text}'.");
+        }
+
+        return value;
     }
 }

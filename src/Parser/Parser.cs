@@ -14,36 +14,47 @@ public sealed class Parser
     private Token _current;
 
     public Parser(IReadOnlyList<Token> tokens)
-{
-    ArgumentNullException.ThrowIfNull(tokens);
-
-    if (tokens.Count == 0)
     {
-        throw new ParserException("Token list cannot be empty.");
-    }
+        ArgumentNullException.ThrowIfNull(tokens);
 
-    foreach (Token token in tokens)
-    {
-        if (token.Type == TokenType.Error)
+        if (tokens.Count == 0)
         {
-            throw new LexerException($"Lexical error: invalid lexeme '{token.Value}'.");
+            throw new ParserException("Token list cannot be empty.");
         }
-    }
 
-    _tokens = tokens;
-    _instructions = new List<Instruction>();
-    _index = 0;
-    _current = _tokens[_index];
-}
+        foreach (Token token in tokens)
+        {
+            if (token.Type == TokenType.Error)
+            {
+                throw new LexerException($"Invalid lexeme '{token.Value}'.");
+            }
+        }
+
+        _tokens = tokens;
+        _instructions = new List<Instruction>();
+        _index = 0;
+        _current = _tokens[_index];
+    }
 
     /// <summary>
     /// Разбирает программу.
-    /// Правила:
+    /// Правило:
     ///     program = main_function ;
-    ///     main_function = "void", "main", "(", ")", block ;
-    ///     block = "{", { statement }, "}" ;
     /// </summary>
     public List<Instruction> ParseProgram()
+    {
+        ParseMainFunction();
+        Match(TokenType.EndOfFile);
+
+        return _instructions;
+    }
+
+    /// <summary>
+    /// Разбирает главную функцию.
+    /// Правило:
+    ///     main_function = "void", "main", "(", ")", block ;
+    /// </summary>
+    private void ParseMainFunction()
     {
         Match(TokenType.VoidKeyword);
 
@@ -55,6 +66,16 @@ public sealed class Parser
 
         Match(TokenType.LeftParenthesis);
         Match(TokenType.RightParenthesis);
+        ParseBlock();
+    }
+
+    /// <summary>
+    /// Разбирает блок инструкций.
+    /// Правило:
+    ///     block = "{", { statement }, "}" ;
+    /// </summary>
+    private void ParseBlock()
+    {
         Match(TokenType.LeftBrace);
 
         while (_current.Type != TokenType.RightBrace && _current.Type != TokenType.EndOfFile)
@@ -63,9 +84,6 @@ public sealed class Parser
         }
 
         Match(TokenType.RightBrace);
-        Match(TokenType.EndOfFile);
-
-        return _instructions;
     }
 
     /// <summary>
@@ -75,7 +93,7 @@ public sealed class Parser
     /// </summary>
     private void ParseStatement()
     {
-        if (_current.Type == TokenType.Identifier && _current.Value?.ToString() == "print")
+        if (IsIdentifier("print"))
         {
             ParsePrintStatement();
         }
@@ -94,7 +112,7 @@ public sealed class Parser
     {
         Advance();
         Match(TokenType.LeftParenthesis);
-        ParseAdditiveExpression();
+        ParseExpression();
         Match(TokenType.RightParenthesis);
         Match(TokenType.Semicolon);
 
@@ -108,16 +126,25 @@ public sealed class Parser
     /// </summary>
     private void ParseExpressionStatement()
     {
-        ParseAdditiveExpression();
+        ParseExpression();
         Match(TokenType.Semicolon);
 
         _instructions.Add(new Instruction(OpCode.Pop));
     }
 
     /// <summary>
-    /// Разбирает операторы сложения и вычитания.
-    /// Правила:
+    /// Разбирает выражение.
+    /// Правило:
     ///     expression = additive_expression ;
+    /// </summary>
+    private void ParseExpression()
+    {
+        ParseAdditiveExpression();
+    }
+
+    /// <summary>
+    /// Разбирает операторы сложения и вычитания.
+    /// Правило:
     ///     additive_expression = multiplicative_expression,
     ///         { ( "+" | "-" ), multiplicative_expression } ;
     /// </summary>
@@ -184,39 +211,42 @@ public sealed class Parser
     }
 
     /// <summary>
-    /// Выполняет разбор унарного плюса и минуса.
+    /// Разбирает унарный плюс и минус.
     /// Правило:
-    ///     unary_expression = { "+" | "-" }, primary_expression ;
+    ///     unary_expression = ( "+" | "-" ), unary_expression
+    ///         | primary_expression ;
     /// </summary>
     private void ParseUnaryExpression()
     {
-        if (_current.Type == TokenType.Plus)
+        switch (_current.Type)
         {
-            Advance();
-            ParseUnaryExpression();
-            return;
-        }
+            case TokenType.Plus:
+                Advance();
+                ParseUnaryExpression();
+                break;
 
-        if (_current.Type == TokenType.Minus)
-        {
-            Advance();
-            ParseUnaryExpression();
-            _instructions.Add(new Instruction(OpCode.Neg));
-            return;
-        }
+            case TokenType.Minus:
+                Advance();
+                ParseUnaryExpression();
+                _instructions.Add(new Instruction(OpCode.Neg));
+                break;
 
-        ParsePrimaryExpression();
+            default:
+                ParsePrimaryExpression();
+                break;
+        }
     }
 
     /// <summary>
     /// Разбирает элементарные выражения.
-    /// Правила:
+    /// Правило:
     ///     primary_expression = integer_literal
     ///         | "(", expression, ")"
     ///         | sqrt_call
     ///         | abs_call
     ///         | min_call
-    ///         | max_call ;
+    ///         | max_call
+    ///         | read_int_call ;
     /// </summary>
     private void ParsePrimaryExpression()
     {
@@ -235,53 +265,39 @@ public sealed class Parser
 
             case TokenType.LeftParenthesis:
                 Advance();
-                ParseAdditiveExpression();
+                ParseExpression();
                 Match(TokenType.RightParenthesis);
                 break;
 
             case TokenType.Identifier:
                 {
                     string functionName = _current.Value?.ToString() ?? string.Empty;
-                    Advance();
 
                     switch (functionName)
                     {
                         case "sqrt":
-                            Match(TokenType.LeftParenthesis);
-                            ParseAdditiveExpression();
-                            Match(TokenType.RightParenthesis);
-                            _instructions.Add(new Instruction(OpCode.Sqrt));
+                            ParseSqrtCall();
                             break;
 
                         case "abs":
-                            Match(TokenType.LeftParenthesis);
-                            ParseAdditiveExpression();
-                            Match(TokenType.RightParenthesis);
-                            _instructions.Add(new Instruction(OpCode.Abs));
+                            ParseAbsCall();
                             break;
 
                         case "min":
-                            Match(TokenType.LeftParenthesis);
-                            ParseAdditiveExpression();
-                            Match(TokenType.Comma);
-                            ParseAdditiveExpression();
-                            Match(TokenType.RightParenthesis);
-                            _instructions.Add(new Instruction(OpCode.Min));
+                            ParseMinCall();
                             break;
 
                         case "max":
-                            Match(TokenType.LeftParenthesis);
-                            ParseAdditiveExpression();
-                            Match(TokenType.Comma);
-                            ParseAdditiveExpression();
-                            Match(TokenType.RightParenthesis);
-                            _instructions.Add(new Instruction(OpCode.Max));
+                            ParseMaxCall();
+                            break;
+
+                        case "readInt":
+                            ParseReadIntCall();
                             break;
 
                         default:
                             throw new ParserException(
-                                $"Unexpected identifier '{functionName}' where expected one of: sqrt, abs, min, max"
-                            );
+                                $"Unexpected identifier '{functionName}' where expected one of: sqrt, abs, min, max, readInt");
                     }
                 }
 
@@ -289,9 +305,94 @@ public sealed class Parser
 
             default:
                 throw new ParserException(
-                    $"Unexpected lexeme {_current} where expected IntLiteral, LeftParenthesis or Identifier"
-                );
+                    $"Unexpected lexeme {_current} where expected IntLiteral, LeftParenthesis or Identifier");
         }
+    }
+
+    /// <summary>
+    /// Разбирает вызов функции sqrt.
+    /// Правило:
+    ///     sqrt_call = "sqrt", "(", expression, ")" ;
+    /// </summary>
+    private void ParseSqrtCall()
+    {
+        Advance();
+        Match(TokenType.LeftParenthesis);
+        ParseExpression();
+        Match(TokenType.RightParenthesis);
+
+        _instructions.Add(new Instruction(OpCode.Sqrt));
+    }
+
+    /// <summary>
+    /// Разбирает вызов функции abs.
+    /// Правило:
+    ///     abs_call = "abs", "(", expression, ")" ;
+    /// </summary>
+    private void ParseAbsCall()
+    {
+        Advance();
+        Match(TokenType.LeftParenthesis);
+        ParseExpression();
+        Match(TokenType.RightParenthesis);
+
+        _instructions.Add(new Instruction(OpCode.Abs));
+    }
+
+    /// <summary>
+    /// Разбирает вызов функции min.
+    /// Правило:
+    ///     min_call = "min", "(", expression, ",", expression, ")" ;
+    /// </summary>
+    private void ParseMinCall()
+    {
+        Advance();
+        Match(TokenType.LeftParenthesis);
+        ParseExpression();
+        Match(TokenType.Comma);
+        ParseExpression();
+        Match(TokenType.RightParenthesis);
+
+        _instructions.Add(new Instruction(OpCode.Min));
+    }
+
+    /// <summary>
+    /// Разбирает вызов функции max.
+    /// Правило:
+    ///     max_call = "max", "(", expression, ",", expression, ")" ;
+    /// </summary>
+    private void ParseMaxCall()
+    {
+        Advance();
+        Match(TokenType.LeftParenthesis);
+        ParseExpression();
+        Match(TokenType.Comma);
+        ParseExpression();
+        Match(TokenType.RightParenthesis);
+
+        _instructions.Add(new Instruction(OpCode.Max));
+    }
+
+    /// <summary>
+    /// Разбирает вызов функции readInt.
+    /// Правило:
+    ///     read_int_call = "readInt", "(", ")" ;
+    /// </summary>
+    private void ParseReadIntCall()
+    {
+        Advance();
+        Match(TokenType.LeftParenthesis);
+        Match(TokenType.RightParenthesis);
+
+        _instructions.Add(new Instruction(OpCode.Read));
+    }
+
+    /// <summary>
+    /// Проверяет, что текущая лексема — идентификатор с заданным именем.
+    /// </summary>
+    private bool IsIdentifier(string name)
+    {
+        return _current.Type == TokenType.Identifier && _current.Value?.ToString() == name;
     }
 
     /// <summary>

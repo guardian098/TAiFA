@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Interpreter/Interpreter.csproj" />
     <Project Path="src/Lexems/Lexems.csproj" />
     <Project Path="src/Parser/Parser.csproj" />
     <Project Path="src/VirtualMachine/VirtualMachine.csproj" />

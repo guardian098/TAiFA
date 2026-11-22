@@ -15,4 +15,5 @@ public enum OpCode
     Min,
     Max,
     Print,
+    Read,
 }
