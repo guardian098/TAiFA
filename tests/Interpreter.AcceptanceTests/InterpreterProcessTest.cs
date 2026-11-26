@@ -18,12 +18,7 @@ public class InterpreterProcessTest
     }
 
     [Theory]
-    [InlineData("void main() { print(readInt()); }", "42\n", "42\n")]
-    [InlineData("void main() { print(readInt() + readInt()); }", "2 3\n", "5\n")]
-    [InlineData("void main() { print(readInt() - readInt()); }", "10\r\n3\r\n", "7\n")]
-    [InlineData("void main() { print(max(readInt(), readInt())); }", "  4\n\n 9", "9\n")]
-    [InlineData("void main() { print(readInt()); }", "-2147483648", "-2147483648\n")]
-    [InlineData("void main() { readInt(); print(1); }", "5", "1\n")]
+    [MemberData(nameof(GetStdinProgramData))]
     public void ProgramReadsIntegersFromStdin(string source, string stdin, string expectedStdout)
     {
         (int exitCode, string stdout, string stderr) = RunSource(source, stdin);
@@ -34,11 +29,7 @@ public class InterpreterProcessTest
     }
 
     [Theory]
-    [InlineData("void main() { print(2147483648); }", "Lexical error")]
-    [InlineData("void main() { print(1; }", "Syntax error")]
-    [InlineData("void main() { print(readInt(1)); }", "Syntax error")]
-    [InlineData("void main() { print(10 / 0); }", "Runtime error")]
-    [InlineData("void main() { print(2147483647 + 1); }", "Runtime error")]
+    [MemberData(nameof(GetErrorProgramData))]
     public void ErrorsAreReportedToStderrWithNonZeroExitCode(string source, string expectedMessage)
     {
         (int exitCode, string stdout, string stderr) = RunSource(source);
@@ -49,11 +40,7 @@ public class InterpreterProcessTest
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   \n")]
-    [InlineData("abc")]
-    [InlineData("12abc")]
-    [InlineData("2147483648")]
+    [MemberData(nameof(GetInvalidStdinData))]
     public void InvalidStdinIsReportedAsRuntimeError(string stdin)
     {
         (int exitCode, string stdout, string stderr) = RunSource("void main() { print(readInt()); }", stdin);
@@ -103,6 +90,43 @@ public class InterpreterProcessTest
         Assert.Equal(1, exitCode);
         Assert.Empty(stdout);
         Assert.Contains("not found", stderr);
+    }
+
+    public static TheoryData<string, string, string> GetStdinProgramData()
+    {
+        return new TheoryData<string, string, string>
+        {
+            { "void main() { print(readInt()); }", "42\n", "42\n" },
+            { "void main() { print(readInt() + readInt()); }", "2 3\n", "5\n" },
+            { "void main() { print(readInt() - readInt()); }", "10\r\n3\r\n", "7\n" },
+            { "void main() { print(max(readInt(), readInt())); }", "  4\n\n 9", "9\n" },
+            { "void main() { print(readInt()); }", "-2147483648", "-2147483648\n" },
+            { "void main() { readInt(); print(1); }", "5", "1\n" },
+        };
+    }
+
+    public static TheoryData<string, string> GetErrorProgramData()
+    {
+        return new TheoryData<string, string>
+        {
+            { "void main() { print(2147483648); }", "Lexical error" },
+            { "void main() { print(1; }", "Syntax error" },
+            { "void main() { print(readInt(1)); }", "Syntax error" },
+            { "void main() { print(10 / 0); }", "Runtime error" },
+            { "void main() { print(2147483647 + 1); }", "Runtime error" },
+        };
+    }
+
+    public static TheoryData<string> GetInvalidStdinData()
+    {
+        return new TheoryData<string>
+        {
+            { "" },
+            { "   \n" },
+            { "abc" },
+            { "12abc" },
+            { "2147483648" },
+        };
     }
 
     private static (int ExitCode, string StdOut, string StdErr) RunSource(string source, string stdin = "")

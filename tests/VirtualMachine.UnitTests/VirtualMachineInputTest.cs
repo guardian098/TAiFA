@@ -11,13 +11,7 @@ namespace VirtualMachine.UnitTests;
 public class VirtualMachineInputTest
 {
     [Theory]
-    [InlineData("5", "5")]
-    [InlineData("  42  ", "42")]
-    [InlineData("-7\n", "-7")]
-    [InlineData("+7\r\n", "7")]
-    [InlineData("\n\n  13", "13")]
-    [InlineData("2147483647", "2147483647")]
-    [InlineData("-2147483648", "-2147483648")]
+    [MemberData(nameof(GetSingleIntegerData))]
     public void CanReadSingleInteger(string input, string expected)
     {
         List<Instruction> program = new List<Instruction>
@@ -91,8 +85,7 @@ public class VirtualMachineInputTest
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   \n\r\n")]
+    [MemberData(nameof(GetEndOfInputData))]
     public void ReportsEndOfInput(string input)
     {
         List<Instruction> program = new List<Instruction>
@@ -118,12 +111,7 @@ public class VirtualMachineInputTest
     }
 
     [Theory]
-    [InlineData("abc")]
-    [InlineData("12abc")]
-    [InlineData("1.5")]
-    [InlineData("--5")]
-    [InlineData("2147483648")]
-    [InlineData("-2147483649")]
+    [MemberData(nameof(GetInvalidIntegerData))]
     public void ReportsInvalidInteger(string input)
     {
         List<Instruction> program = new List<Instruction>
@@ -150,6 +138,42 @@ public class VirtualMachineInputTest
 
         Assert.Throws<VirtualMachineException>(() => virtualMachine.Run());
         Assert.Equal("1" + Environment.NewLine, output.ToString());
+    }
+
+    public static TheoryData<string, string> GetSingleIntegerData()
+    {
+        return new TheoryData<string, string>
+        {
+            { "5", "5" },
+            { "  42  ", "42" },
+            { "-7\n", "-7" },
+            { "+7\r\n", "7" },
+            { "\n\n  13", "13" },
+            { "2147483647", "2147483647" },
+            { "-2147483648", "-2147483648" },
+        };
+    }
+
+    public static TheoryData<string> GetEndOfInputData()
+    {
+        return new TheoryData<string>
+        {
+            { "" },
+            { "   \n\r\n" },
+        };
+    }
+
+    public static TheoryData<string> GetInvalidIntegerData()
+    {
+        return new TheoryData<string>
+        {
+            { "abc" },
+            { "12abc" },
+            { "1.5" },
+            { "--5" },
+            { "2147483648" },
+            { "-2147483649" },
+        };
     }
 
     private static string Execute(List<Instruction> program, string input)

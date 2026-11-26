@@ -19,16 +19,24 @@ public class ParserInputTest
     }
 
     [Theory]
-    [InlineData("void main() { readInt; }")]
-    [InlineData("void main() { readInt(; }")]
-    [InlineData("void main() { readInt(); ")]
-    [InlineData("void main() { readInt(1); }")]
-    [InlineData("void main() { readInt() }")]
-    [InlineData("void main() { print(readInt(); }")]
-    [InlineData("void main() { readint(); }")]
+    [MemberData(nameof(GetReadIntErrorsData))]
     public void CanReportReadIntErrors(string code)
     {
         Assert.Throws<ParserException>(() => Parse(code));
+    }
+
+    public static TheoryData<string> GetReadIntErrorsData()
+    {
+        return new TheoryData<string>
+        {
+            { "void main() { readInt; }" },
+            { "void main() { readInt(; }" },
+            { "void main() { readInt(); " },
+            { "void main() { readInt(1); }" },
+            { "void main() { readInt() }" },
+            { "void main() { print(readInt(); }" },
+            { "void main() { readint(); }" },
+        };
     }
 
     public static TheoryData<string, List<Instruction>> GetReadIntData()
